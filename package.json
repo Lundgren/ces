@@ -1,0 +1,13 @@
+{
+  "name": "ces",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "start": "web-ext run"
+  },
+  "author": "Andreas Lundgren",
+  "license": "MIT",
+  "devDependencies": {
+    "web-ext": "^7.5.0"
+  }
+}
