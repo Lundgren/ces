@@ -1,10 +1,14 @@
 {
   "name": "Cornucopia Enhancement Suite",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Various enhancements to Cornucopia.se",
   "manifest_version": 3,
   "author": "Andreas Lundgren",
   "permissions": ["storage"],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "content_scripts": [
     {
       "js": ["content.js"],

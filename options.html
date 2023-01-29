@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+
+    <style>
+      body {
+        padding: 20px;
+      }
+      label {
+        display: block;
+        width: 800px;
+        padding: 0 0 20px;
+      }
+      textarea {
+        width: 100%;
+        height: 150px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CES Settings</h1>
+
+    <label>
+      <input type="checkbox" id="hide_first_visit" />
+      <span>Hide unseen comments & content on first visit</span>
+    </label>
+    <label>
+      <input type="checkbox" id="highlight_paragraphs" />
+      <span>Highlight new and updated content in the article</span>
+    </label>
+    <label>
+      <input type="checkbox" id="favorite_me" />
+      <span>Mark my own comments as favorites</span>
+    </label>
+    <label>
+      <input type="text" id="color_paragraphs" />
+      <span>Color for new content</span>
+    </label>
+    <label>
+      <input type="text" id="color_comments" />
+      <span>Color for new comments</span>
+    </label>
+    <label>
+      <input type="text" id="color_favorites" />
+      <span>Color for favorite comments</span>
+    </label>
+    <label>
+      <input type="text" id="color_navigation" />
+      <span>Color for navigated comments</span>
+    </label>
+
+    <label>
+      <span> Highlight new comments from these users as favorites, one username per row</span><br />
+      <textarea id="favorite_authors"></textarea>
+    </label>
+    <label>
+      <span>Hide new comments from these users, one username per row</span><br />
+      <textarea id="hidden_authors"></textarea>
+    </label>
+
+    <input type="button" id="save" value="Save" style="min-width: 100px" />
+    <div id="status_saved" style="display: none; color: green; padding-left: 5px"></div>
+
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.3] - 2023-01-29
+
+### Added
+
+- Option view for changing settings
+- Ability to favorite threads
+- Your own comments are automatically favorited
+- Ability to favorite specific users
+- Ability to automatically hide specific users
+
 ## [0.0.2] - 2023-01-29
 
 ### Fixed
