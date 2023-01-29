@@ -32,8 +32,8 @@ const NAVIGATE_COLOR = "#9b9cff";
   const paragraphs = enhanceContent(state);
 
   // Add hotkeys to navigate between paragraphs and comments
-  const unseen = [...paragraphs, ...comments.filter((c) => c.type === "comment")];
-  enableHotkeyNavigationFor(unseen);
+  const unseen = [...paragraphs, ...comments];
+  enableHotkeyNavigationFor(unseen.filter((c) => c.type !== "author"));
 
   // Draw the minimap to the right of the page
   const canvas = document.createElement("canvas");
@@ -61,7 +61,7 @@ async function readStorage(key, defaultVal) {
   }
 
   // Userscripts
-  if (GM?.getValue) {
+  if (typeof GM !== "undefined") {
     return await GM.getValue(key, defaultVal);
   }
 
@@ -80,7 +80,7 @@ async function writeStorage(key, value) {
   }
 
   // Userscripts
-  if (GM?.setValue) {
+  if (typeof GM !== "undefined") {
     return await GM.setValue(key, value);
   }
 
@@ -109,8 +109,6 @@ function enhanceComments(state, toggleComment) {
     makeThreadHideable($container, $comment, state[$container.id], toggleComment);
 
     // Highlight unread comments
-    const isAuthor = $container.classList.contains("bypostauthor");
-
     if (isUnread && state.readBefore) {
       highlighted.push({ type: "comment", $el: $comment });
       $comment.style.borderLeft = `3px solid ${COMMENT_COLOR}`;
@@ -118,6 +116,7 @@ function enhanceComments(state, toggleComment) {
       $comment.style.transition = "color 500ms";
     }
 
+    const isAuthor = $container.classList.contains("bypostauthor");
     if (isAuthor) {
       highlighted.push({ type: "author", $el: $comment });
     }
@@ -140,12 +139,12 @@ function enhanceContent(state) {
     // If the user has read the article before, but never read this paragraph, highlight it
     // Ignore iframes, as they are often used for ads
     if (state.readBefore && !seenBefore && !$paragraph.outerHTML.includes("iframe")) {
-      const wrapper = document.createElement("div");
-      wrapper.style = `margin-left: -4px; padding-left: 4px; border-left: 3px solid ${PARAGRAPH_COLOR}`;
-      $paragraph.replaceWith(wrapper);
-      wrapper.append($paragraph);
+      const $wrapper = document.createElement("div");
+      $wrapper.style = `margin-left: -4px; padding-left: 4px; border-left: 3px solid ${PARAGRAPH_COLOR}`;
+      $paragraph.replaceWith($wrapper);
+      $wrapper.append($paragraph);
 
-      highlighted.push({ type: "paragraph", $el: $paragraph });
+      highlighted.push({ type: "paragraph", $el: $wrapper });
     }
   }
 
