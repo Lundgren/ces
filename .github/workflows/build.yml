@@ -19,7 +19,7 @@ jobs:
           cp manifest_v3.json manifest.json
 
       - name: Package extension with manifest v3
-        run: zip manifest_v3.zip manifest.json content.js options.js options.html icons
+        run: zip -r manifest_v3.zip manifest.json content.js options.js options.html icons
 
       - name: Create manifest v2
         run: |
@@ -28,7 +28,7 @@ jobs:
 
       - name: Package extension with manifest v2
         run: |
-          zip manifest_v2.zip manifest.json content.js options.js options.html icons
+          zip -r manifest_v2.zip manifest.json content.js options.js options.html icons
 
       - uses: actions/upload-artifact@v3
         with:
