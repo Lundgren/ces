@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.4] - 2023-01-30
+
+### Fixed
+
+- Fixed so that viewed comments and content are stored correctly
+- Fixed so that the logged in user are identified correctly
+- Fixed so that first visit is calculated correctly
+- Fixed so that favorite markings are removed correctly
+- Fixed so that paragraphs was stored correctly
+
 ## [0.0.3] - 2023-01-29
 
 ### Added

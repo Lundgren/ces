@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cornucopia Enhancement Suite
 // @namespace    github.com/lundgren
-// @version      0.0.3
+// @version      0.0.4
 // @description  Variuos enhancements to Cornucopia.se
 // @author       You
 // @match        https://cornucopia.se/*
@@ -42,6 +42,7 @@ const StateFlags = {
   const pageId = window.location.pathname;
   const pageState = await readStorage(pageId, { readBefore: false });
   const preferences = await readStorage("preferences", DEFAULT_PREFERENCES);
+  const readBefore = pageState.readBefore;
 
   // Setup a state object to simplify working with flags
   const state = {
@@ -78,10 +79,7 @@ const StateFlags = {
   const comments = getComments();
 
   // Get a list of all new/updated paragraphs if the page has been visited before
-  let unreadParagraphs = [];
-  if (pageState.readBefore || !preferences.hideFirstVisit) {
-    unreadParagraphs = getUnreadParagraphs(state);
-  }
+  let unreadParagraphs = getUnreadParagraphs(state);
 
   const allItems = [...unreadParagraphs, ...comments];
   const redrawHighlightsAndMinimap = () => {
@@ -120,7 +118,7 @@ const StateFlags = {
         color = ADMIN_COLOR;
       }
       if (comment.unread) {
-        if (pageState.readBefore || !preferences.hideFirstVisit) {
+        if (readBefore || !preferences.hideFirstVisit) {
           color = preferences.colorComments;
         }
         if (state.isFavoriteAuthor(comment.author) || comment.isParentFavorite()) {
@@ -148,7 +146,9 @@ const StateFlags = {
   for (const paragraph of unreadParagraphs) {
     paragraph.highlightColor = () => {
       if (preferences.highlightParagraphs) {
-        return preferences.colorParagraphs;
+        if (readBefore || !preferences.hideFirstVisit) {
+          return preferences.colorParagraphs;
+        }
       }
       return undefined;
     };
@@ -168,7 +168,7 @@ const StateFlags = {
   // Save the info about this visit
   pageState.lastReadTs = Date.now();
   pageState.readBefore = true;
-  writeStorage(pageId, state);
+  writeStorage(pageId, pageState);
 })();
 
 async function readStorage(key, defaultVal) {
@@ -212,7 +212,9 @@ async function writeStorage(key, value) {
 function findLoggedInUser() {
   const $wpAdmin = document.getElementById("wp-admin-bar-my-account");
   if ($wpAdmin) {
-    return ($wpAdmin.getElementsByClassName("display-name").innerText || "").trim().toLowerCase();
+    return ($wpAdmin.getElementsByClassName("display-name")[0].innerText || "")
+      .trim()
+      .toLowerCase();
   }
   return null;
 }
@@ -305,6 +307,12 @@ function drawHighlights(items) {
         item.$el.style.paddingLeft = "6px";
       } else if (item.type === "paragraph") {
         item.$el.style = `margin-left: -4px; padding-left: 4px; border-left: 3px solid ${color}`;
+      }
+    } else {
+      // Remove possible highlights
+      item.$el.style.borderLeft = "";
+      if (item.type === "comment") {
+        item.$el.style.paddingLeft = "";
       }
     }
   }
