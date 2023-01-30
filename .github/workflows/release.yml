@@ -1,0 +1,54 @@
+name: Draft release tag
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+      - "V*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create manifest v3
+        run: |
+          cp manifest_v3.json manifest.json
+
+      - name: Package extension with manifest v3
+        run: zip manifest_v3.zip manifest.json content.js options.js options.html icons
+
+      - name: Create manifest v2
+        run: |
+          rm manifest.json
+          cp manifest_v3.json manifest.json
+
+      - name: Package extension with manifest v2
+        run: |
+          zip manifest_v2.zip manifest.json content.js options.js options.html icons
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: manifest_v3
+          path: manifest_v3.zip
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: manifest_v2
+          path: manifest_v2.zip
+
+      - name: "Create Release"
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body_path: CHANGELOG.md
+          draft: true
+          files: |
+            manifest_v2.zip
+            manifest_v3.zip
