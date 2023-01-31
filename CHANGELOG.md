@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.6] - 2023-01-31
+
+### Fixed
+
+- Fixed manifest description length to be < 132 characters
+
 ## [0.0.5] - 2023-01-31
 
 ### Added

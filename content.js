@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cornucopia Enhancement Suite
 // @namespace    github.com/lundgren
-// @version      0.0.4
+// @version      0.0.6
 // @description  Variuos enhancements to Cornucopia.se
 // @author       You
 // @match        https://cornucopia.se/*
