@@ -42,7 +42,7 @@ const StateFlags = {
   const pageId = window.location.pathname;
   const pageState = await readStorage(pageId, { readBefore: false });
   const preferences = await readStorage("preferences", DEFAULT_PREFERENCES);
-  const readBefore = pageState.readBefore;
+  const articleReadBefore = pageState.readBefore;
 
   // Setup a state object to simplify working with flags
   const state = {
@@ -51,7 +51,7 @@ const StateFlags = {
     isFavorite: (id) => pageState[id] & StateFlags.Favorite,
     isFavoriteAuthor: (author) => preferences.favoriteAuthors.includes(author),
     shouldAutoHide: (author) => preferences.hiddenAuthors.includes(author),
-    setRead: (id) => (pageState[id] |= StateFlags.Read),
+    setAsRead: (id) => (pageState[id] |= StateFlags.Read),
     setHidden: (id, hidden) => {
       if (hidden) {
         pageState[id] |= StateFlags.Hidden;
@@ -75,13 +75,11 @@ const StateFlags = {
   const $canvas = document.createElement("canvas");
   document.body.appendChild($canvas);
 
-  // Get a list of all comments and make them clickable
+  // Get a list of all comments and paragraphs
   const comments = getComments();
+  const paragraphs = getParagraphs();
 
-  // Get a list of all new/updated paragraphs if the page has been visited before
-  let unreadParagraphs = getUnreadParagraphs(state);
-
-  const allItems = [...unreadParagraphs, ...comments];
+  const allItems = [...paragraphs, ...comments];
   const redrawHighlightsAndMinimap = () => {
     drawHighlights(allItems);
     drawMinimap($canvas, allItems);
@@ -90,6 +88,8 @@ const StateFlags = {
   // Add state to all comments and make them clickable
   for (const comment of comments) {
     comment.unread = state.isUnread(comment.id);
+    state.setAsRead(comment.id);
+
     if (comment.unread && state.shouldAutoHide(comment.author)) {
       state.setHidden(comment.id, true);
       comment.hidden = true;
@@ -118,7 +118,7 @@ const StateFlags = {
         color = ADMIN_COLOR;
       }
       if (comment.unread) {
-        if (readBefore || !preferences.hideFirstVisit) {
+        if (articleReadBefore || !preferences.hideFirstVisit) {
           color = preferences.colorComments;
         }
         if (state.isFavoriteAuthor(comment.author) || comment.isParentFavorite()) {
@@ -138,19 +138,21 @@ const StateFlags = {
       redrawHighlightsAndMinimap();
     };
 
-    state.setRead(comment.id);
     makeCommentClickable(comment);
   }
 
   // Add state to all paragraphs
-  for (const paragraph of unreadParagraphs) {
+  for (const paragraph of paragraphs) {
+    paragraph.unread = state.isUnread(paragraph.id);
+    state.setAsRead(paragraph.id);
+
     paragraph.highlightColor = () => {
-      if (preferences.highlightParagraphs) {
-        if (readBefore || !preferences.hideFirstVisit) {
-          return preferences.colorParagraphs;
-        }
-      }
-      return undefined;
+      const hightlight =
+        preferences.highlightParagraphs &&
+        paragraph.unread &&
+        (articleReadBefore || !preferences.hideFirstVisit);
+
+      return hightlight ? preferences.colorParagraphs : undefined;
     };
   }
 
@@ -212,7 +214,7 @@ async function writeStorage(key, value) {
 function findLoggedInUser() {
   const $wpAdmin = document.getElementById("wp-admin-bar-my-account");
   if ($wpAdmin) {
-    return ($wpAdmin.getElementsByClassName("display-name")[0].innerText || "")
+    return ($wpAdmin.getElementsByClassName("display-name")[0]?.innerText || "")
       .trim()
       .toLowerCase();
   }
@@ -245,7 +247,7 @@ function getComments() {
   const comments = [];
   const traverseAndSave = ($el, parent) => {
     const id = $el.id;
-    const author = ($el.getElementsByClassName("author")[0].innerText || "").trim().toLowerCase();
+    const author = ($el.getElementsByClassName("author")[0]?.innerText || "").trim().toLowerCase();
     const $commentText = $el.getElementsByClassName("comment-text")[0];
     $commentText.style.transition = "color 500ms";
 
@@ -254,7 +256,8 @@ function getComments() {
       $el: $commentText,
       type: "comment",
       author: author,
-      fromAdmin: $el.classList.contains("bypostauthor"),
+      fromAdmin:
+        $el.classList.contains("bypostauthor") || $el.classList.contains("comment-author-admin"),
       children: [],
       parent: parent,
     };
@@ -275,24 +278,37 @@ function getComments() {
   return comments;
 }
 
-// getParagraphs will  return a list of unread/modified paragraphs
-function getUnreadParagraphs(state) {
+// getParagraphs will  return a list of all paragraphs
+function getParagraphs() {
   const paragraphs = [];
 
   const $post = document.getElementById("penci-post-entry-inner");
   for (let $paragraph of $post.children) {
-    const hash = hashCode($paragraph.outerHTML);
-    const unread = state.isUnread(hash);
-    state.setRead(hash);
+    if ($paragraph.nodeName === "P" || $paragraph.nodeName === "BLOCKQUOTE") {
+      if ($paragraph.nodeName === "BLOCKQUOTE") {
+        // Blockquotes uses the left border to indicate quotes, so we wrap it in a div we can style
+        const $wrapper = document.createElement("div");
+        $paragraph.replaceWith($wrapper);
+        $wrapper.append($paragraph);
+        $paragraph = $wrapper;
+      }
 
-    // Store new paragraphs but ignore iframes, as they are often used for ads
-    if (unread && !$paragraph.outerHTML.includes("iframe")) {
-      const $wrapper = document.createElement("div");
-      $paragraph.replaceWith($wrapper);
-      $wrapper.append($paragraph);
-
-      paragraphs.push({ type: "paragraph", $el: $wrapper });
+      paragraphs.push({
+        id: hashCode($paragraph.outerHTML),
+        type: "paragraph",
+        $el: $paragraph,
+      });
     }
+  }
+
+  // Add next post link as a paragraph
+  const $nextPost = document.getElementsByClassName("post-pagination")[0];
+  if ($nextPost) {
+    paragraphs.push({
+      id: hashCode($nextPost.outerHTML),
+      type: "nextpost",
+      $el: $nextPost,
+    });
   }
 
   return paragraphs;
@@ -302,18 +318,12 @@ function drawHighlights(items) {
   for (let item of items) {
     const color = item.highlightColor();
     if (color) {
-      if (item.type === "comment" && item.unread) {
-        item.$el.style.borderLeft = `3px solid ${color}`;
-        item.$el.style.paddingLeft = "6px";
-      } else if (item.type === "paragraph") {
-        item.$el.style = `margin-left: -4px; padding-left: 4px; border-left: 3px solid ${color}`;
-      }
-    } else {
+      item.$el.style.borderLeft = `3px solid ${color}`;
+      item.$el.style.paddingLeft = "6px";
+    } else if (item.$el.style.borderLeft != "") {
       // Remove possible highlights
       item.$el.style.borderLeft = "";
-      if (item.type === "comment") {
-        item.$el.style.paddingLeft = "";
-      }
+      item.$el.style.paddingLeft = "";
     }
   }
 }
@@ -323,7 +333,7 @@ function drawHighlights(items) {
 //    - allow the user to navigate to the first new comment or paragraph using the I key
 //    - allow the user to minimize navigated comments by pressing the M key
 function enableHotkeyNavigationFor(allItems, preferences) {
-  const entries = allItems.filter((item) => item.type === "paragraph" || item.unread);
+  const entries = allItems.filter((item) => item.unread);
 
   let navigatedEntry;
   let styleBefore;
@@ -384,12 +394,24 @@ function enableHotkeyNavigationFor(allItems, preferences) {
         }
       }
     } else if (e.code === "KeyI") {
+      for (let i = 0; i < entries.length; i++) {
+        const isMinimized = entries[i].$el.getBoundingClientRect().height === 0;
+
+        if (!isMinimized) {
+          scrollTo(entries[i]);
+          return;
+        }
+      }
       if (entries.length > 0) {
         scrollTo(entries[0]);
       }
     } else if (e.code === "KeyM") {
-      if (navigatedEntry && navigatedEntry.type !== "paragraph") {
+      if (navigatedEntry && navigatedEntry.type === "comment") {
         navigatedEntry.$el.hideMe();
+      }
+    } else if (e.code === "KeyN") {
+      if (navigatedEntry && navigatedEntry.type === "comment") {
+        navigatedEntry.$el.favoriteIt();
       }
     }
   });
@@ -464,8 +486,8 @@ function makeCommentClickable(comment) {
   $favoriteBtn.style.cursor = "pointer";
   $favoriteBtn.src = comment.isFavorite() ? FILLED_STAR_BASE64 : EMPTY_STAR_BASE64;
   $author.prepend($favoriteBtn);
-  $favoriteBtn.addEventListener("click", (e) => {
-    e.stopImmediatePropagation();
+  const toggleFavorite = (e) => {
+    e?.stopImmediatePropagation();
     if (comment.isFavorite()) {
       $favoriteBtn.src = EMPTY_STAR_BASE64;
       comment.setFavorite(false);
@@ -473,7 +495,10 @@ function makeCommentClickable(comment) {
       $favoriteBtn.src = FILLED_STAR_BASE64;
       comment.setFavorite(true);
     }
-  });
+  };
+
+  $favoriteBtn.addEventListener("click", toggleFavorite);
+  comment.$el.favoriteIt = toggleFavorite;
 }
 
 function createHiddenThreadContainer($container, comment) {

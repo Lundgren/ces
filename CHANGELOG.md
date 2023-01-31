@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.5] - 2023-01-31
+
+### Added
+
+- Highlight for new articles
+- Keyboard shortcut to favorite comments
+
+### Fixed
+
+- Fixed so that paragraphs are highlighted correctly
+- Fixed so that admin is highlighted correctly
+- Fixed so that I keyboard navigation works even if top comment is minimized
+
 ## [0.0.4] - 2023-01-30
 
 ### Fixed
