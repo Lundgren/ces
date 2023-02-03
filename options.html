@@ -20,18 +20,36 @@
   </head>
   <body>
     <h1>CES Settings</h1>
+    <span style="font-style: italic">
+      Har du problem, idéer eller annat så skicka ett mail till
+      <a href="mailto:lundgrenextension@gmail.com">lundgrenextension@gmail.com</a>
+      <br />
+      <br />
+    </span>
 
     <label>
       <input type="checkbox" id="hide_first_visit" />
-      <span>Hide unseen comments & content on first visit</span>
+      <span>Hide highlights on unseen comments & content on first visit to article</span>
     </label>
     <label>
       <input type="checkbox" id="highlight_paragraphs" />
       <span>Highlight new and updated content in the article</span>
     </label>
     <label>
+      <input type="checkbox" id="highlight_admin" />
+      <span>Highlight comments from admin/author</span>
+    </label>
+    <label>
       <input type="checkbox" id="favorite_me" />
       <span>Mark my own comments as favorites</span>
+    </label>
+    <label>
+      <input type="checkbox" id="auto_hide_default" />
+      <span>Automatically minimize threads without unread comments</span>
+    </label>
+    <label>
+      <input type="checkbox" id="jump_first_unread" />
+      <span>Automatically jump to the first unread paragraph or comment when reloading a page</span>
     </label>
     <label>
       <input type="text" id="color_paragraphs" />
@@ -50,6 +68,15 @@
       <span>Color for navigated comments</span>
     </label>
 
+    <label>
+      <span> Highlight new comments containing any of these words, one word or phrase per row</span>
+      <br />
+      <span style="font-style: italic">
+        Tip: Write your own username to find comments mentioning you
+      </span>
+      <br />
+      <textarea id="favorite_words"></textarea>
+    </label>
     <label>
       <span> Highlight new comments from these users as favorites, one username per row</span><br />
       <textarea id="favorite_authors"></textarea>

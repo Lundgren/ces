@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.7] - 2023-02-02
+
+### Added
+
+- Favorite words and highlight comments containing them
+- Settings button next to comments
+- Ability to automatically hide already read threads
+- Automatically jump to first unread content or comment
+- Option if admin should be highlighted
+- Unread count to comment header and minimized threads
+
+### Fixed
+
+- Fixed so that builds correctly includes manifest v2
+- Fixed so that admin highlight has the correct color
+
 ## [0.0.6] - 2023-01-31
 
 ### Fixed

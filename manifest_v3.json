@@ -1,6 +1,6 @@
 {
   "name": "Cornucopia Enhancement Suite",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Improvements for cornucopia.se with highlights for new comments, favorite threads, hidden content, and improved navigation",
   "manifest_version": 3,
   "author": "Andreas Lundgren",
@@ -15,6 +15,9 @@
       "matches": ["https://cornucopia.se/*"]
     }
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
