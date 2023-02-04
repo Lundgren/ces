@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.8] - 2023-02-04
+
+### Fixed
+
+- Fixed so that next article isn't highlighted if nothing changes
+- Fixed so that jump to first feature works on Chrome
+
 ## [0.0.7] - 2023-02-02
 
 ### Added

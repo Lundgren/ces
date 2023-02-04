@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cornucopia Enhancement Suite
 // @namespace    github.com/lundgren
-// @version      0.0.7
+// @version      0.0.8
 // @description  Variuos enhancements to Cornucopia.se
 // @author       You
 // @match        https://cornucopia.se/*
@@ -359,7 +359,7 @@ function getParagraphs() {
   const $nextPost = document.getElementsByClassName("post-pagination")[0];
   if ($nextPost) {
     paragraphs.push({
-      id: hashCode($nextPost.outerHTML),
+      id: hashCode($nextPost.innerText),
       type: "nextpost",
       $el: $nextPost,
     });
@@ -554,6 +554,10 @@ function enableHotkeyNavigationFor(allItems, navigationColor, jumpToFirstUnread)
   });
 
   if (jumpToFirstUnread) {
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+
     jumpToFirst();
   }
 }
