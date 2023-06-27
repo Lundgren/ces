@@ -105,10 +105,45 @@ const StateFlags = {
   };
 
   // Add state to all comments and make them clickable
+  const positionTitle = ["1st", "2nd", "3rd", "Nylander"];
+  let position = -1;
+
+  const articleTs = getArticleTimestamp();
+  let firstCommentTs;
+
   for (const comment of comments) {
     comment.unread = state.isUnread(comment.id);
     comment.hasFavoriteWords = containsAny(comment.$el, preferences.favoriteWords);
     state.setAsRead(comment.id);
+
+    // Set up time popup and add position to the first 4 comments
+    const commentsDate = new Date(comment.$dateEl.getAttribute("datetime"));
+    comment.$dateEl.title = commentsDate.toLocaleString();
+    if (!comment.parent) {
+    if (!firstCommentTs) {
+      firstCommentTs = commentsDate.getTime();
+      let after = parseInt((commentsDate - articleTs) / 1000);
+
+      if (after < 180) {
+        position++;
+        let date = comment.$dateEl.innerText.substr(0, 16);
+        comment.$dateEl.innerText = `${date}:${commentsDate.getSeconds()} (1st - ${after}s after posting)`;
+      }
+    } else {
+      let after = parseInt((commentsDate.getTime() - firstCommentTs) / 1000);
+      if (position > -1 && (position < 4 || after < 200)) {
+        position++;
+        let date = comment.$dateEl.innerText.substr(0, 16);
+        if (position < 4) {
+          comment.$dateEl.innerText = `${date}:${commentsDate.getSeconds()} (${
+            positionTitle[position]
+          } - ${after}s after 1st)`;
+        } else {
+          comment.$dateEl.innerText = `${date}:${commentsDate.getSeconds()} (${after}s after 1st)`;
+        }
+      }
+    }
+  }
 
     const shouldAutoHideAuthor = preferences.hiddenAuthors.includes(comment.author);
     if (comment.unread && shouldAutoHideAuthor) {
@@ -307,13 +342,17 @@ function getComments() {
   const comments = [];
   const traverseAndSave = ($el, parent) => {
     const id = $el.id;
-    const author = ($el.getElementsByClassName("author")[0]?.textContent || "").trim().toLowerCase();
+    const author = ($el.getElementsByClassName("author")[0]?.textContent || "")
+      .trim()
+      .toLowerCase();
     const $commentText = $el.getElementsByClassName("comment-text")[0];
+    const $dateText = $el.getElementsByClassName("date")[0];
     $commentText.style.transition = "color 500ms";
 
     const comment = {
       id: id,
       $el: $commentText,
+      $dateEl: $dateText,
       type: "comment",
       author: author,
       fromAdmin:
@@ -638,7 +677,7 @@ function makeCommentClickable(comment) {
   const $author = comment.$el.getElementsByClassName("author")[0];
   $author.title = "Hide comments";
   $author.style.cursor = "pointer";
-  $author.prepend(imageButton(hideCommentsIcnSrc), "Hide comments");
+  $author.prepend(imageButton(hideCommentsIcnSrc, "Hide comments"));
   $author.addEventListener("click", hideComments);
   comment.$el.hideIt = hideComments;
   comment.$el.temporarilyHideIt = temporarilyHideComments;
@@ -649,7 +688,10 @@ function makeCommentClickable(comment) {
   comment.$el.temporarilyShowIt = temporarilyShowComments;
 
   // Add favorite button
-  const $favoriteBtn = imageButton(comment.isFavorite() ? filledStarIcnSrc : emptyStarIcnSrc, "Favorite comments");
+  const $favoriteBtn = imageButton(
+    comment.isFavorite() ? filledStarIcnSrc : emptyStarIcnSrc,
+    "Favorite comments"
+  );
   $author.prepend($favoriteBtn);
   const toggleFavorite = (e) => {
     e?.stopImmediatePropagation();
@@ -716,9 +758,9 @@ function getCommentCount(comment) {
 function imageButton(imgSrc, title) {
   // <img style="width: 16px; height: 16px; margin-right: 8px;" />
   const $imgBtn = document.createElement("img");
-  $imgBtn.style.width = '16px';
-  $imgBtn.style.height = '16px';
-  $imgBtn.style.marginRight = '8px';
+  $imgBtn.style.width = "16px";
+  $imgBtn.style.height = "16px";
+  $imgBtn.style.marginRight = "8px";
   $imgBtn.style.cursor = "pointer";
   $imgBtn.title = title;
   $imgBtn.src = imgSrc;
@@ -732,6 +774,12 @@ async function loadImage(src) {
   await image.decode();
 
   return image.src;
+}
+
+function getArticleTimestamp() {
+  const $timestamp = document.querySelector("time.entry-date.published");
+  const timestamp = $timestamp.getAttribute("datetime");
+  return new Date(timestamp).getTime();
 }
 
 // https://stackoverflow.com/a/52171480

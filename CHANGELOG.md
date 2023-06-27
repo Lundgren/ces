@@ -1,6 +1,10 @@
 # Changelog
 
-## [0.0.9]
+## [0.0.9] - 2023-06-27
+
+### Added
+
+- Timestamp and position to the first comments
 
 ### Fixed
 
