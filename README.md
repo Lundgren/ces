@@ -9,7 +9,7 @@ _Cornucopia Enhancement Suite_ is a 3rd party browser extension that improves th
 
 * [Chrome web store](https://chrome.google.com/webstore/detail/cornucopia-enhancement-su/fodaamebkhjlgeaapmfikdjkleahllmb?hl=en-US&authuser=0)
 * [Firefox Browser add-ons](https://addons.mozilla.org/en-US/firefox/addon/cornucopia-enhancement-suite/)
-
+* [Opera addons](https://addons.opera.com/en/extensions/details/cornucopia-enhancement-suite/)
 
 ## Features
 

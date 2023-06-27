@@ -2,6 +2,12 @@
 
 ## [0.0.9] - 2023-06-27
 
+### Fixed
+
+- Updated version in manifests
+
+## [0.0.9] - 2023-06-27
+
 ### Added
 
 - Timestamp and position to the first comments
