@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.9]
+
+### Fixed
+
+- Improved performance
+- Fixed so that paragraphs aren't highlighted when styles changes
+
 ## [0.0.8] - 2023-02-04
 
 ### Fixed
