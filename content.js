@@ -120,30 +120,31 @@ const StateFlags = {
     const commentsDate = new Date(comment.$dateEl.getAttribute("datetime"));
     comment.$dateEl.title = commentsDate.toLocaleString();
     if (!comment.parent) {
-    if (!firstCommentTs) {
-      firstCommentTs = commentsDate.getTime();
-      let after = parseInt((commentsDate - articleTs) / 1000);
+      if (!firstCommentTs) {
+        firstCommentTs = commentsDate.getTime();
+        const after = parseInt((commentsDate - articleTs) / 1000);
 
-      if (after < 180) {
-        position++;
-        let date = comment.$dateEl.innerText.substr(0, 16);
-        comment.$dateEl.innerText = `${date}:${commentsDate.getSeconds()} (1st - ${after}s after posting)`;
-      }
-    } else {
-      let after = parseInt((commentsDate.getTime() - firstCommentTs) / 1000);
-      if (position > -1 && (position < 4 || after < 200)) {
-        position++;
-        let date = comment.$dateEl.innerText.substr(0, 16);
-        if (position < 4) {
-          comment.$dateEl.innerText = `${date}:${commentsDate.getSeconds()} (${
-            positionTitle[position]
-          } - ${after}s after 1st)`;
-        } else {
-          comment.$dateEl.innerText = `${date}:${commentsDate.getSeconds()} (${after}s after 1st)`;
+        if (after < 180) {
+          position++;
+          const date = comment.$dateEl.innerText.substr(0, 16);
+          const seconds = commentsDate.getSeconds() < 10 ? `0${commentsDate.getSeconds()}` : commentsDate.getSeconds();
+          comment.$dateEl.innerText = `${date}:${seconds} (1st - ${after}s after posting)`;
+        }
+      } else {
+        const after = parseInt((commentsDate.getTime() - firstCommentTs) / 1000);
+        if (position > -1 && (position < 4 || after < 200)) {
+          position++;
+          const date = comment.$dateEl.innerText.substr(0, 16);
+          const seconds = commentsDate.getSeconds() < 10 ? `0${commentsDate.getSeconds()}` : commentsDate.getSeconds();
+
+          if (position < 4) {
+            comment.$dateEl.innerText = `${date}:${seconds} (${positionTitle[position]} - ${after}s after 1st)`;
+          } else {
+            comment.$dateEl.innerText = `${date}:${seconds} (${after}s after 1st)`;
+          }
         }
       }
     }
-  }
 
     const shouldAutoHideAuthor = preferences.hiddenAuthors.includes(comment.author);
     if (comment.unread && shouldAutoHideAuthor) {
@@ -218,9 +219,7 @@ const StateFlags = {
 
     paragraph.highlightColor = () => {
       const hightlight =
-        preferences.highlightParagraphs &&
-        paragraph.unread &&
-        (articleReadBefore || !preferences.hideFirstVisit);
+        preferences.highlightParagraphs && paragraph.unread && (articleReadBefore || !preferences.hideFirstVisit);
 
       return hightlight ? preferences.colorParagraphs : undefined;
     };
@@ -246,8 +245,7 @@ const StateFlags = {
     }
   };
 
-  const hideReadComments =
-    state.isHideReadThreads() || (preferences.autoHideByDefault && !articleReadBefore);
+  const hideReadComments = state.isHideReadThreads() || (preferences.autoHideByDefault && !articleReadBefore);
   if (hideReadComments) {
     toggleReadThreads(true);
   }
@@ -309,9 +307,7 @@ async function writeStorage(key, value) {
 function findLoggedInUser() {
   const $wpAdmin = document.getElementById("wp-admin-bar-my-account");
   if ($wpAdmin) {
-    return ($wpAdmin.getElementsByClassName("display-name")[0]?.innerText || "")
-      .trim()
-      .toLowerCase();
+    return ($wpAdmin.getElementsByClassName("display-name")[0]?.innerText || "").trim().toLowerCase();
   }
   return null;
 }
@@ -342,9 +338,7 @@ function getComments() {
   const comments = [];
   const traverseAndSave = ($el, parent) => {
     const id = $el.id;
-    const author = ($el.getElementsByClassName("author")[0]?.textContent || "")
-      .trim()
-      .toLowerCase();
+    const author = ($el.getElementsByClassName("author")[0]?.textContent || "").trim().toLowerCase();
     const $commentText = $el.getElementsByClassName("comment-text")[0];
     const $dateText = $el.getElementsByClassName("date")[0];
     $commentText.style.transition = "color 500ms";
@@ -355,8 +349,7 @@ function getComments() {
       $dateEl: $dateText,
       type: "comment",
       author: author,
-      fromAdmin:
-        $el.classList.contains("bypostauthor") || $el.classList.contains("comment-author-admin"),
+      fromAdmin: $el.classList.contains("bypostauthor") || $el.classList.contains("comment-author-admin"),
       children: [],
       parent: parent,
     };
@@ -616,9 +609,7 @@ function drawMinimap($canvas, entries) {
   const scrollOffset = window.innerWidth - document.documentElement.clientWidth;
   $canvas.style = `position:fixed; left: ${
     document.body.clientWidth - 5
-  }px; top: ${scrollOffset}px; width: 5px; height: ${
-    window.innerHeight - scrollOffset * 2
-  }px; z-index: 9999;`;
+  }px; top: ${scrollOffset}px; width: 5px; height: ${window.innerHeight - scrollOffset * 2}px; z-index: 9999;`;
   $canvas.width = 5;
   $canvas.height = window.innerHeight;
 
@@ -688,10 +679,7 @@ function makeCommentClickable(comment) {
   comment.$el.temporarilyShowIt = temporarilyShowComments;
 
   // Add favorite button
-  const $favoriteBtn = imageButton(
-    comment.isFavorite() ? filledStarIcnSrc : emptyStarIcnSrc,
-    "Favorite comments"
-  );
+  const $favoriteBtn = imageButton(comment.isFavorite() ? filledStarIcnSrc : emptyStarIcnSrc, "Favorite comments");
   $author.prepend($favoriteBtn);
   const toggleFavorite = (e) => {
     e?.stopImmediatePropagation();

@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.0.9] - 2023-06-27
+## [0.0.11] - 2023-06-27
+
+### Fixed
+
+- Updated version in manifests
+
+## [0.0.10] - 2023-06-27
 
 ### Fixed
 
