@@ -5,6 +5,7 @@ const DEFAULT_PREFERENCES = {
   favoriteMe: true,
   autoHideByDefault: false,
   jumpToFirstUnread: false,
+  rewriteTwitterLinks: false,
   colorParagraphs: "#84dc23",
   colorComments: "#dc2328",
   colorFavorites: "#23dcd7",
@@ -21,6 +22,8 @@ function saveOptions() {
     favoriteMe: document.getElementById("favorite_me").checked,
     autoHideByDefault: document.getElementById("auto_hide_default").checked,
     jumpToFirstUnread: document.getElementById("jump_first_unread").checked,
+    rewriteTwitterLinks: document.getElementById("rewrite_twitter_links").checked,
+    rewriteTwitterDomain: document.getElementById("rewrite_twitter_domain").value || "nitter.net",
     colorParagraphs: document.getElementById("color_paragraphs").value,
     colorComments: document.getElementById("color_comments").value,
     colorFavorites: document.getElementById("color_favorites").value,
@@ -65,6 +68,8 @@ function saveOptions() {
       document.getElementById("status_saved").style.display = "none";
     }, 2000);
   });
+
+  window.close();
 }
 
 function updateUI(prefs) {
@@ -74,6 +79,8 @@ function updateUI(prefs) {
   document.getElementById("favorite_me").checked = prefs.favoriteMe;
   document.getElementById("auto_hide_default").checked = prefs.autoHideByDefault;
   document.getElementById("jump_first_unread").checked = prefs.jumpToFirstUnread;
+  document.getElementById("rewrite_twitter_links").checked = prefs.rewriteTwitterLinks;
+  document.getElementById("rewrite_twitter_domain").value = prefs.rewriteTwitterDomain || "";
   document.getElementById("color_paragraphs").value = prefs.colorParagraphs;
   document.getElementById("color_comments").value = prefs.colorComments;
   document.getElementById("color_favorites").value = prefs.colorFavorites;

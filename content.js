@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cornucopia Enhancement Suite
 // @namespace    github.com/lundgren
-// @version      0.0.8
+// @version      0.0.12
 // @description  Variuos enhancements to Cornucopia.se
 // @author       You
 // @match        https://cornucopia.se/*
@@ -17,6 +17,8 @@ const DEFAULT_PREFERENCES = {
   favoriteMe: true,
   autoHideByDefault: false,
   jumpToFirstUnread: false,
+  rewriteTwitterLinks: false,
+  rewriteTwitterDomain: "nitter.net",
   colorParagraphs: "#84dc23",
   colorComments: "#dc2328",
   colorFavorites: "#23dcd7",
@@ -26,9 +28,10 @@ const DEFAULT_PREFERENCES = {
   hiddenAuthors: [],
 };
 
+const TWITTER_DOMAINS = ["https://twitter.com/", "https://www.twitter.com/", "https://mobile.twitter.com/"];
+
 const SETTINGS_ICN_BASE64 = `data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaGVpZ2h0PSIyMHB4IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMCAyMCIgd2lkdGg9IjIwcHgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48dGl0bGUvPjxkZXNjLz48ZGVmcy8+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSI+PGcgZmlsbD0iIzAwMDAwMCIgaWQ9IkNvcmUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00NjQuMDAwMDAwLCAtMzgwLjAwMDAwMCkiPjxnIGlkPSJzZXR0aW5ncyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDY0LjAwMDAwMCwgMzgwLjAwMDAwMCkiPjxwYXRoIGQ9Ik0xNy40LDExIEMxNy40LDEwLjcgMTcuNSwxMC40IDE3LjUsMTAgQzE3LjUsOS42IDE3LjUsOS4zIDE3LjQsOSBMMTkuNSw3LjMgQzE5LjcsNy4xIDE5LjcsNi45IDE5LjYsNi43IEwxNy42LDMuMiBDMTcuNSwzLjEgMTcuMywzIDE3LDMuMSBMMTQuNSw0LjEgQzE0LDMuNyAxMy40LDMuNCAxMi44LDMuMSBMMTIuNCwwLjUgQzEyLjUsMC4yIDEyLjIsMCAxMiwwIEw4LDAgQzcuOCwwIDcuNSwwLjIgNy41LDAuNCBMNy4xLDMuMSBDNi41LDMuMyA2LDMuNyA1LjQsNC4xIEwzLDMuMSBDMi43LDMgMi41LDMuMSAyLjMsMy4zIEwwLjMsNi44IEMwLjIsNi45IDAuMyw3LjIgMC41LDcuNCBMMi42LDkgQzIuNiw5LjMgMi41LDkuNiAyLjUsMTAgQzIuNSwxMC40IDIuNSwxMC43IDIuNiwxMSBMMC41LDEyLjcgQzAuMywxMi45IDAuMywxMy4xIDAuNCwxMy4zIEwyLjQsMTYuOCBDMi41LDE2LjkgMi43LDE3IDMsMTYuOSBMNS41LDE1LjkgQzYsMTYuMyA2LjYsMTYuNiA3LjIsMTYuOSBMNy42LDE5LjUgQzcuNiwxOS43IDcuOCwxOS45IDguMSwxOS45IEwxMi4xLDE5LjkgQzEyLjMsMTkuOSAxMi42LDE5LjcgMTIuNiwxOS41IEwxMywxNi45IEMxMy42LDE2LjYgMTQuMiwxNi4zIDE0LjcsMTUuOSBMMTcuMiwxNi45IEMxNy40LDE3IDE3LjcsMTYuOSAxNy44LDE2LjcgTDE5LjgsMTMuMiBDMTkuOSwxMyAxOS45LDEyLjcgMTkuNywxMi42IEwxNy40LDExIEwxNy40LDExIFogTTEwLDEzLjUgQzguMSwxMy41IDYuNSwxMS45IDYuNSwxMCBDNi41LDguMSA4LjEsNi41IDEwLDYuNSBDMTEuOSw2LjUgMTMuNSw4LjEgMTMuNSwxMCBDMTMuNSwxMS45IDExLjksMTMuNSAxMCwxMy41IEwxMCwxMy41IFoiIGlkPSJTaGFwZSIvPjwvZz48L2c+PC9nPjwvc3ZnPg==`;
 const HIDE_COMMENTS_ICN_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48IS0tISBGb250IEF3ZXNvbWUgUHJvIDYuMi4xIGJ5IEBmb250YXdlc29tZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tIExpY2Vuc2UgLSBodHRwczovL2ZvbnRhd2Vzb21lLmNvbS9saWNlbnNlIChDb21tZXJjaWFsIExpY2Vuc2UpIENvcHlyaWdodCAyMDIyIEZvbnRpY29ucywgSW5jLiAtLT48cGF0aCBkPSJNMjMzLjQgMTA1LjRjMTIuNS0xMi41IDMyLjgtMTIuNSA0NS4zIDBsMTkyIDE5MmMxMi41IDEyLjUgMTIuNSAzMi44IDAgNDUuM3MtMzIuOCAxMi41LTQ1LjMgMEwyNTYgMTczLjMgODYuNiAzNDIuNmMtMTIuNSAxMi41LTMyLjggMTIuNS00NS4zIDBzLTEyLjUtMzIuOCAwLTQ1LjNsMTkyLTE5MnoiLz48L3N2Zz4=`;
-const FAVORITE_COMMENTS_ICN = `<img style="width: 16px; height: 16px; margin-right: 8px;" />`;
 const EMPTY_STAR_ICN_BASE64 =
   "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaWQ9Ikljb25zIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMyMzIzMjM7fTwvc3R5bGU+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTIzLjA1MywxMi42ODNhMy4xMzIsMy4xMzIsMCwwLDAtMS43MzctNS4zNDFsLTMuOTA5LS41NjhhMS4xMywxLjEzLDAsMCwxLS44NTEtLjYxOUwxNC44MDgsMi42MTRhMy4xMzEsMy4xMzEsMCwwLDAtNS42MTYsMEw3LjQ0NCw2LjE1NWExLjEzLDEuMTMsMCwwLDEtLjg1MS42MTlsLTMuOTA5LjU2OEEzLjEzMiwzLjEzMiwwLDAsMCwuOTQ3LDEyLjY4NEwzLjc3NiwxNS40NGExLjEzMSwxLjEzMSwwLDAsMSwuMzI2LDFsLS42NjcsMy44OTJhMy4xMzEsMy4xMzEsMCwwLDAsNC41NDIsMy4zbDMuNS0xLjgzOGExLjEyNSwxLjEyNSwwLDAsMSwxLjA1MiwwaDBsMy41LDEuODM4YTMuMTEsMy4xMSwwLDAsMCwzLjMtLjIzOSwzLjEwOSwzLjEwOSwwLDAsMCwxLjI0NS0zLjA2M0wxOS45LDE2LjQ0MWExLjEzLDEuMTMsMCwwLDEsLjMyNi0xWm0tNC4yMjYsMS4zMjVhMy4xMzEsMy4xMzEsMCwwLDAtLjksMi43NzJsLjY2NywzLjg5MmExLjEzMSwxLjEzMSwwLDAsMS0xLjY0MiwxLjE5M2wtMy41LTEuODM4YTMuMTM0LDMuMTM0LDAsMCwwLTIuOTE0LDBsLTMuNSwxLjgzOGExLjEzMSwxLjEzMSwwLDAsMS0xLjY0Mi0xLjE5M2wuNjY3LTMuODkxYTMuMTMyLDMuMTMyLDAsMCwwLS45LTIuNzczTDIuMzQ0LDExLjI1MWExLjEzMiwxLjEzMiwwLDAsMSwuNjI3LTEuOTNMNi44OCw4Ljc1M0EzLjEyOCwzLjEyOCwwLDAsMCw5LjIzNyw3LjA0TDEwLjk4NSwzLjVhMS4xNjUsMS4xNjUsMCwwLDEsMi4wMywwTDE0Ljc2Myw3LjA0QTMuMTI4LDMuMTI4LDAsMCwwLDE3LjEyLDguNzUzbDMuOTA5LjU2OGExLjEzMiwxLjEzMiwwLDAsMSwuNjI3LDEuOTNaIi8+PC9zdmc+";
 const FILLED_STAR_ICN_BASE64 =
@@ -223,6 +226,11 @@ const StateFlags = {
 
       return hightlight ? preferences.colorParagraphs : undefined;
     };
+  }
+
+  // Rewrite twitter links to use nitter instead
+  if (preferences.rewriteTwitterLinks) {
+    rewriteTwitterLinks(preferences.rewriteTwitterDomain || "nitter.net");
   }
 
   // Highlight all new content and comments
@@ -768,6 +776,27 @@ function getArticleTimestamp() {
   const $timestamp = document.querySelector("time.entry-date.published");
   const timestamp = $timestamp.getAttribute("datetime");
   return new Date(timestamp).getTime();
+}
+
+function rewriteTwitterLinks(replaceDomain) {
+  const $twitterLinks = document.querySelectorAll("a[href*='twitter.com']");
+  const fullReplaceDomain = `https://${replaceDomain}/`;
+
+  for (const $link of $twitterLinks) {
+    let url = $link.href;
+    for (const domain of TWITTER_DOMAINS) {
+      if (url.indexOf(domain) !== -1) {
+        let rewrittenUrl = url.replace(domain, fullReplaceDomain);
+        $link.href = rewrittenUrl;
+
+        if ($link.textContent.indexOf(domain) !== -1) {
+          let rewrittenLinkText = $link.textContent.replace(domain, fullReplaceDomain);
+          $link.textContent = rewrittenLinkText;
+        }
+        break;
+      }
+    }
+  }
 }
 
 // https://stackoverflow.com/a/52171480

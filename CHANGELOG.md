@@ -1,10 +1,16 @@
 # Changelog
 
+## [0.0.12] - 2023-06-30
+
+### Added
+
+- Added Twitter link re-direct
+
 ## [0.0.11] - 2023-06-27
 
 ### Fixed
 
-- Updated version in manifests
+- Fixed zero padding in comments date
 
 ## [0.0.10] - 2023-06-27
 
