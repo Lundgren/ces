@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.13] - 2023-07-16
+
+### Fixed
+
+- Fixed favorite button on threads
+- Fixed so that links are handled correctly in favorite words
+- Improved the minimap highlight positions
+
 ## [0.0.12] - 2023-06-30
 
 ### Added

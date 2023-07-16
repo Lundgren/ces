@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cornucopia Enhancement Suite
 // @namespace    github.com/lundgren
-// @version      0.0.12
+// @version      0.0.13
 // @description  Variuos enhancements to Cornucopia.se
 // @author       You
 // @match        https://cornucopia.se/*
@@ -442,17 +442,30 @@ function containsAny($el, words = []) {
 
 function highlightWords($el, words = [], color) {
   const $commentText = $el.getElementsByClassName("comment-content")[0];
-  for (let i = 0; i < $commentText.children.length; i++) {
-    const $child = $commentText.children[i];
-    if ($child.tagName === "P") {
-      for (let word of words) {
-        $child.innerHTML = $child.innerHTML.replace(
-          new RegExp(`(${word})`, "ig"),
-          `<span style="border-bottom: 2px solid ${color};">$1</span>`
-        );
+
+  function walkAndHighlight(node) {
+      for (let i = 0; i < node.childNodes.length; i++) {
+          walkAndHighlight(node.childNodes[i]);
       }
-    }
+
+      if (node.nodeType === 3) { // Node.TEXT_NODE
+          for (let word of words) {
+              let regex = new RegExp(`(${word})`, "ig");
+              let replacement = `<span style="border-bottom: 2px solid ${color};">$1</span>`;
+              let parent = node.parentNode;
+              let temp = document.createElement("div");
+              temp.innerHTML = node.textContent.replace(regex, replacement);
+              
+              while (temp.firstChild) {
+                  parent.insertBefore(temp.firstChild, node);
+              }
+
+              parent.removeChild(node);
+          }
+      }
   }
+
+  walkAndHighlight($commentText);
 }
 
 function updateCommentCount(count) {
@@ -631,8 +644,9 @@ function drawMinimap($canvas, entries) {
 
     if (color) {
       const rect = item.$el.getBoundingClientRect();
+      let elementTop = item.$el.offsetTop;
       ctx.fillStyle = color;
-      ctx.fillRect(0, (window.scrollY + rect.top) * q, 5, rect.height * q);
+      ctx.fillRect(0, elementTop * q, 5, rect.height * q);
     }
   }
 }
@@ -695,7 +709,7 @@ function makeCommentClickable(comment) {
       $favoriteBtn.src = emptyStarIcnSrc;
       comment.setFavorite(false);
     } else {
-      $favoriteBtn.src = emptyStarIcnSrc;
+      $favoriteBtn.src = filledStarIcnSrc;
       comment.setFavorite(true);
     }
   };
