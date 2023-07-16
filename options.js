@@ -1,4 +1,5 @@
 const DEFAULT_PREFERENCES = {
+  commentsReadOnPageLoad: true,
   hideFirstVisit: true,
   highlightParagraphs: true,
   highlightAdmin: true,
@@ -6,6 +7,7 @@ const DEFAULT_PREFERENCES = {
   autoHideByDefault: false,
   jumpToFirstUnread: false,
   rewriteTwitterLinks: false,
+  rewriteTwitterDomain: "nitter.net",
   colorParagraphs: "#84dc23",
   colorComments: "#dc2328",
   colorFavorites: "#23dcd7",
@@ -16,6 +18,7 @@ const DEFAULT_PREFERENCES = {
 };
 function saveOptions() {
   const prefs = {
+    commentsReadOnPageLoad: document.getElementById("comments_read_on_page_load").checked,
     hideFirstVisit: document.getElementById("hide_first_visit").checked,
     highlightParagraphs: document.getElementById("highlight_paragraphs").checked,
     highlightAdmin: document.getElementById("highlight_admin").checked,
@@ -73,6 +76,7 @@ function saveOptions() {
 }
 
 function updateUI(prefs) {
+  document.getElementById("comments_read_on_page_load").checked = prefs.commentsReadOnPageLoad;
   document.getElementById("hide_first_visit").checked = prefs.hideFirstVisit;
   document.getElementById("highlight_paragraphs").checked = prefs.highlightParagraphs;
   document.getElementById("highlight_admin").checked = prefs.highlightAdmin;

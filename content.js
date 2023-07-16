@@ -11,6 +11,7 @@
 // ==/UserScript==
 
 const DEFAULT_PREFERENCES = {
+  commentsReadOnPageLoad: true,
   hideFirstVisit: true,
   highlightParagraphs: true,
   highlightAdmin: true,
@@ -64,6 +65,8 @@ const StateFlags = {
   // Fetch info about previous visits
   const pageState = await readStorage(pageId, { readBefore: false });
   const preferences = { ...DEFAULT_PREFERENCES, ...(await readStorage("preferences", {})) };
+  preferences.colorCommentsDark = darkenColor(preferences.colorComments, 0.2);
+  preferences.colorFavoritesDark = darkenColor(preferences.colorFavorites, 0.2);
   const articleReadBefore = pageState.readBefore;
 
   // Setup a state object to simplify working with flags
@@ -117,7 +120,9 @@ const StateFlags = {
   for (const comment of comments) {
     comment.unread = state.isUnread(comment.id);
     comment.hasFavoriteWords = containsAny(comment.$el, preferences.favoriteWords);
-    state.setAsRead(comment.id);
+    if (preferences.commentsReadOnPageLoad) {
+      state.setAsRead(comment.id);
+    }
 
     // Set up time popup and add position to the first 4 comments
     const commentsDate = new Date(comment.$dateEl.getAttribute("datetime"));
@@ -183,11 +188,19 @@ const StateFlags = {
       if (comment.unread) {
         if (articleReadBefore || !preferences.hideFirstVisit) {
           color = preferences.colorComments;
+
+          if (!preferences.commentsReadOnPageLoad && comment.viewed) {
+            color = preferences.colorCommentsDark;
+          }
         }
 
         const isFavoriteAuthor = preferences.favoriteAuthors.includes(comment.author);
         if (isFavoriteAuthor || comment.isParentFavorite() || comment.hasFavoriteWords) {
           color = preferences.colorFavorites;
+
+          if (!preferences.commentsReadOnPageLoad && comment.viewed) {
+            color = preferences.colorFavoritesDark;
+          }
         }
       }
       return color;
@@ -272,6 +285,53 @@ const StateFlags = {
   pageState.lastReadTs = Date.now();
   pageState.readBefore = true;
   writeStorage(pageId, pageState);
+
+  // Setup listener to figure out when the user reads specific comments
+  if (!preferences.commentsReadOnPageLoad) {
+    let viewedCommentsChanged = false;
+    const commentsMap = new WeakMap();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const comment = commentsMap.get(entry.target);
+            if (comment && !comment.viewed) {
+              comment.viewed = true;
+              viewedCommentsChanged = true;
+
+              state.setAsRead(comment.id);
+              redrawHighlightsAndMinimap();
+            }
+          }
+        });
+      },
+      {
+        threshold: 1,
+      }
+    );
+
+    for (let comment of comments) {
+      const endOfComment = document.createElement("div");
+      comment.$el.appendChild(endOfComment);
+      commentsMap.set(endOfComment, comment);
+      observer.observe(endOfComment);
+    }
+
+    // Save when the user leaves the page or moves to another tab
+    window.addEventListener("beforeunload", () => {
+      if (viewedCommentsChanged) {
+        writeStorage(pageId, pageState);
+        viewedCommentsChanged = false;
+      }
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && viewedCommentsChanged) {
+        writeStorage(pageId, pageState);
+        viewedCommentsChanged = false;
+      }
+    });
+  }
 })();
 
 async function readStorage(key, defaultVal) {
@@ -444,25 +504,26 @@ function highlightWords($el, words = [], color) {
   const $commentText = $el.getElementsByClassName("comment-content")[0];
 
   function walkAndHighlight(node) {
-      for (let i = 0; i < node.childNodes.length; i++) {
-          walkAndHighlight(node.childNodes[i]);
-      }
+    for (let i = 0; i < node.childNodes.length; i++) {
+      walkAndHighlight(node.childNodes[i]);
+    }
 
-      if (node.nodeType === 3) { // Node.TEXT_NODE
-          for (let word of words) {
-              let regex = new RegExp(`(${word})`, "ig");
-              let replacement = `<span style="border-bottom: 2px solid ${color};">$1</span>`;
-              let parent = node.parentNode;
-              let temp = document.createElement("div");
-              temp.innerHTML = node.textContent.replace(regex, replacement);
-              
-              while (temp.firstChild) {
-                  parent.insertBefore(temp.firstChild, node);
-              }
+    // Node.TEXT_NODE
+    if (node.nodeType === 3) {
+      for (let word of words) {
+        const regex = new RegExp(`(${word})`, "ig");
+        const replacement = `<span style="border-bottom: 2px solid ${color};">$1</span>`;
+        const parent = node.parentNode;
+        const temp = document.createElement("div");
+        temp.innerHTML = node.textContent.replace(regex, replacement);
 
-              parent.removeChild(node);
-          }
+        while (temp.firstChild) {
+          parent.insertBefore(temp.firstChild, node);
+        }
+
+        parent.removeChild(node);
       }
+    }
   }
 
   walkAndHighlight($commentText);
@@ -827,4 +888,74 @@ function hashCode(str) {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
 
   return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+
+function darkenColor(color, amount) {
+  // Convert the hex color to RGB
+  let r = parseInt(color.slice(1, 3), 16);
+  let g = parseInt(color.slice(3, 5), 16);
+  let b = parseInt(color.slice(5, 7), 16);
+
+  // Convert RGB to HSL
+  (r /= 255), (g /= 255), (b /= 255);
+  let max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  let h,
+    s,
+    l = (max + min) / 2;
+
+  if (max === min) {
+    h = s = 0;
+  } else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h /= 6;
+  }
+
+  // Reduce the lightness by the specified amount (0 to 1)
+  l = Math.max(0, l - amount);
+
+  // Convert HSL back to RGB
+  let r1, g1, b1;
+  if (s === 0) {
+    r1 = g1 = b1 = l;
+  } else {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+    let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    let p = 2 * l - q;
+    r1 = hue2rgb(p, q, h + 1 / 3);
+    g1 = hue2rgb(p, q, h);
+    b1 = hue2rgb(p, q, h - 1 / 3);
+  }
+
+  // Convert RGB back to hex
+  r = Math.round(r1 * 255)
+    .toString(16)
+    .padStart(2, "0");
+  g = Math.round(g1 * 255)
+    .toString(16)
+    .padStart(2, "0");
+  b = Math.round(b1 * 255)
+    .toString(16)
+    .padStart(2, "0");
+
+  return "#" + r + g + b;
 }

@@ -2,6 +2,10 @@
 
 ## [0.0.13] - 2023-07-16
 
+### Added
+
+- Added ability to mark comments as read when they are seen
+
 ### Fixed
 
 - Fixed favorite button on threads
