@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cornucopia Enhancement Suite
 // @namespace    github.com/lundgren
-// @version      0.0.13
+// @version      0.0.14
 // @description  Variuos enhancements to Cornucopia.se
 // @author       You
 // @match        https://cornucopia.se/*
@@ -504,24 +504,31 @@ function highlightWords($el, words = [], color) {
   const $commentText = $el.getElementsByClassName("comment-content")[0];
 
   function walkAndHighlight(node) {
-    for (let i = 0; i < node.childNodes.length; i++) {
-      walkAndHighlight(node.childNodes[i]);
-    }
+    if (node) {
+      let children = Array.from(node.childNodes);
+      for(let i = 0; i < children.length; i++) {
+        walkAndHighlight(children[i]);
+      }
 
-    // Node.TEXT_NODE
-    if (node.nodeType === 3) {
-      for (let word of words) {
-        const regex = new RegExp(`(${word})`, "ig");
-        const replacement = `<span style="border-bottom: 2px solid ${color};">$1</span>`;
-        const parent = node.parentNode;
-        const temp = document.createElement("div");
-        temp.innerHTML = node.textContent.replace(regex, replacement);
-
-        while (temp.firstChild) {
-          parent.insertBefore(temp.firstChild, node);
+      // Node.TEXT_NODE
+      if (node.nodeType === 3) {
+        let newText = node.textContent;
+        for (let word of words) {
+          const regex = new RegExp(`(${word})`, "ig");
+          const replacement = `<span style="border-bottom: 2px solid ${color};">$1</span>`;
+          newText = newText.replace(regex, replacement);
         }
 
-        parent.removeChild(node);
+        const temp = document.createElement("div");
+        temp.innerHTML = newText;
+        const parent = node.parentNode;
+
+        if (parent) {
+          while (temp.firstChild) {
+            parent.insertBefore(temp.firstChild, node);
+          }
+          parent.removeChild(node);
+        }
       }
     }
   }

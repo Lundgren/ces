@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.14] - 2023-07-17
+
+### Fixed
+
+- Fixed a bug where new preferences weren't showing correctly in options view
+- Fixed word highlighting 
+
 ## [0.0.13] - 2023-07-16
 
 ### Added

@@ -96,7 +96,7 @@ function updateUI(prefs) {
 
 function restoreOptions() {
   getPreference().then((prefs) => {
-    updateUI(prefs);
+    updateUI({...DEFAULT_PREFERENCES, ...prefs});
   });
 }
 
