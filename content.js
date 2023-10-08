@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Cornucopia Enhancement Suite
 // @namespace    github.com/lundgren
-// @version      0.0.14
-// @description  Variuos enhancements to Cornucopia.se
+// @version      0.0.15
+// @description  Various enhancements to Cornucopia.se
 // @author       You
 // @match        https://cornucopia.se/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=cornucopia.se
@@ -20,6 +20,7 @@ const DEFAULT_PREFERENCES = {
   jumpToFirstUnread: false,
   rewriteTwitterLinks: false,
   rewriteTwitterDomain: "nitter.net",
+  forceOpenInNewTab: false,
   colorParagraphs: "#84dc23",
   colorComments: "#dc2328",
   colorFavorites: "#23dcd7",
@@ -29,7 +30,7 @@ const DEFAULT_PREFERENCES = {
   hiddenAuthors: [],
 };
 
-const TWITTER_DOMAINS = ["https://twitter.com/", "https://www.twitter.com/", "https://mobile.twitter.com/"];
+const TWITTER_DOMAINS = ["https://twitter.com/", "https://www.twitter.com/", "https://mobile.twitter.com/", "https://x.com", "https://www.x.com", "https://mobile.x.com"];
 
 const SETTINGS_ICN_BASE64 = `data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgaGVpZ2h0PSIyMHB4IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMCAyMCIgd2lkdGg9IjIwcHgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48dGl0bGUvPjxkZXNjLz48ZGVmcy8+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSI+PGcgZmlsbD0iIzAwMDAwMCIgaWQ9IkNvcmUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00NjQuMDAwMDAwLCAtMzgwLjAwMDAwMCkiPjxnIGlkPSJzZXR0aW5ncyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDY0LjAwMDAwMCwgMzgwLjAwMDAwMCkiPjxwYXRoIGQ9Ik0xNy40LDExIEMxNy40LDEwLjcgMTcuNSwxMC40IDE3LjUsMTAgQzE3LjUsOS42IDE3LjUsOS4zIDE3LjQsOSBMMTkuNSw3LjMgQzE5LjcsNy4xIDE5LjcsNi45IDE5LjYsNi43IEwxNy42LDMuMiBDMTcuNSwzLjEgMTcuMywzIDE3LDMuMSBMMTQuNSw0LjEgQzE0LDMuNyAxMy40LDMuNCAxMi44LDMuMSBMMTIuNCwwLjUgQzEyLjUsMC4yIDEyLjIsMCAxMiwwIEw4LDAgQzcuOCwwIDcuNSwwLjIgNy41LDAuNCBMNy4xLDMuMSBDNi41LDMuMyA2LDMuNyA1LjQsNC4xIEwzLDMuMSBDMi43LDMgMi41LDMuMSAyLjMsMy4zIEwwLjMsNi44IEMwLjIsNi45IDAuMyw3LjIgMC41LDcuNCBMMi42LDkgQzIuNiw5LjMgMi41LDkuNiAyLjUsMTAgQzIuNSwxMC40IDIuNSwxMC43IDIuNiwxMSBMMC41LDEyLjcgQzAuMywxMi45IDAuMywxMy4xIDAuNCwxMy4zIEwyLjQsMTYuOCBDMi41LDE2LjkgMi43LDE3IDMsMTYuOSBMNS41LDE1LjkgQzYsMTYuMyA2LjYsMTYuNiA3LjIsMTYuOSBMNy42LDE5LjUgQzcuNiwxOS43IDcuOCwxOS45IDguMSwxOS45IEwxMi4xLDE5LjkgQzEyLjMsMTkuOSAxMi42LDE5LjcgMTIuNiwxOS41IEwxMywxNi45IEMxMy42LDE2LjYgMTQuMiwxNi4zIDE0LjcsMTUuOSBMMTcuMiwxNi45IEMxNy40LDE3IDE3LjcsMTYuOSAxNy44LDE2LjcgTDE5LjgsMTMuMiBDMTkuOSwxMyAxOS45LDEyLjcgMTkuNywxMi42IEwxNy40LDExIEwxNy40LDExIFogTTEwLDEzLjUgQzguMSwxMy41IDYuNSwxMS45IDYuNSwxMCBDNi41LDguMSA4LjEsNi41IDEwLDYuNSBDMTEuOSw2LjUgMTMuNSw4LjEgMTMuNSwxMCBDMTMuNSwxMS45IDExLjksMTMuNSAxMCwxMy41IEwxMCwxMy41IFoiIGlkPSJTaGFwZSIvPjwvZz48L2c+PC9nPjwvc3ZnPg==`;
 const HIDE_COMMENTS_ICN_BASE64 = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48IS0tISBGb250IEF3ZXNvbWUgUHJvIDYuMi4xIGJ5IEBmb250YXdlc29tZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tIExpY2Vuc2UgLSBodHRwczovL2ZvbnRhd2Vzb21lLmNvbS9saWNlbnNlIChDb21tZXJjaWFsIExpY2Vuc2UpIENvcHlyaWdodCAyMDIyIEZvbnRpY29ucywgSW5jLiAtLT48cGF0aCBkPSJNMjMzLjQgMTA1LjRjMTIuNS0xMi41IDMyLjgtMTIuNSA0NS4zIDBsMTkyIDE5MmMxMi41IDEyLjUgMTIuNSAzMi44IDAgNDUuM3MtMzIuOCAxMi41LTQ1LjMgMEwyNTYgMTczLjMgODYuNiAzNDIuNmMtMTIuNSAxMi41LTMyLjggMTIuNS00NS4zIDBzLTEyLjUtMzIuOCAwLTQ1LjNsMTkyLTE5MnoiLz48L3N2Zz4=`;
@@ -244,6 +245,11 @@ const StateFlags = {
   // Rewrite twitter links to use nitter instead
   if (preferences.rewriteTwitterLinks) {
     rewriteTwitterLinks(preferences.rewriteTwitterDomain || "nitter.net");
+  }
+
+  // Rewrite all links to open in a new tab
+  if (preferences.forceOpenInNewTab) {
+    rewriteLinksToOpenInNewTab(allItems);
   }
 
   // Highlight all new content and comments
@@ -861,7 +867,7 @@ function getArticleTimestamp() {
 }
 
 function rewriteTwitterLinks(replaceDomain) {
-  const $twitterLinks = document.querySelectorAll("a[href*='twitter.com']");
+  const $twitterLinks = document.querySelectorAll("a[href*='twitter.com'], a[href*='x.com']");
   const fullReplaceDomain = `https://${replaceDomain}/`;
 
   for (const $link of $twitterLinks) {
@@ -879,6 +885,15 @@ function rewriteTwitterLinks(replaceDomain) {
       }
     }
   }
+}
+
+function rewriteLinksToOpenInNewTab(elements) {
+  elements.forEach(item => {
+      const links = item.$el.querySelectorAll('a');
+      links.forEach(link => {
+          link.target = '_blank';
+      });
+  });
 }
 
 // https://stackoverflow.com/a/52171480

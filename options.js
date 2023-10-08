@@ -8,6 +8,7 @@ const DEFAULT_PREFERENCES = {
   jumpToFirstUnread: false,
   rewriteTwitterLinks: false,
   rewriteTwitterDomain: "nitter.net",
+  forceOpenInNewTab: false,
   colorParagraphs: "#84dc23",
   colorComments: "#dc2328",
   colorFavorites: "#23dcd7",
@@ -27,6 +28,7 @@ function saveOptions() {
     jumpToFirstUnread: document.getElementById("jump_first_unread").checked,
     rewriteTwitterLinks: document.getElementById("rewrite_twitter_links").checked,
     rewriteTwitterDomain: document.getElementById("rewrite_twitter_domain").value || "nitter.net",
+    forceOpenInNewTab: document.getElementById("force_open_new_tab").checked,
     colorParagraphs: document.getElementById("color_paragraphs").value,
     colorComments: document.getElementById("color_comments").value,
     colorFavorites: document.getElementById("color_favorites").value,
@@ -85,6 +87,7 @@ function updateUI(prefs) {
   document.getElementById("jump_first_unread").checked = prefs.jumpToFirstUnread;
   document.getElementById("rewrite_twitter_links").checked = prefs.rewriteTwitterLinks;
   document.getElementById("rewrite_twitter_domain").value = prefs.rewriteTwitterDomain || "";
+  document.getElementById("force_open_new_tab").checked = prefs.forceOpenInNewTab;
   document.getElementById("color_paragraphs").value = prefs.colorParagraphs;
   document.getElementById("color_comments").value = prefs.colorComments;
   document.getElementById("color_favorites").value = prefs.colorFavorites;

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.0.15] - 2023-10-08
+
+### Added
+
+- Added ability to force article & comment links to be opened in new window
+- Added userscript to embed twitter links directly on cornucopia.se. Not part of the extension due to external script requirement.
+
+### Fixed
+
+- Fixed so that x.com links are rewritten as well as the old twitter.com (if option is chosen)
+
 ## [0.0.14] - 2023-07-17
 
 ### Fixed
